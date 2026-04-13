@@ -8,7 +8,7 @@ Open `index.html` in a browser. No build, no install — React loaded via CDN.
 
 ## Live demo
 
-Deployed at: _(URL will be added after publishing)_
+**https://volzokalex.github.io/shai-xp-progress/**
 
 ## What it demonstrates
 
