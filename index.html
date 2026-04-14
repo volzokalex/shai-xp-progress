@@ -655,8 +655,8 @@ function CertificatesTab({ certificates }){
       {certificates.map((c, i) => (
         <div key={i} className="cert-card">
           <div className="cert-seal">🏅</div>
-          <div className="cert-label">Certificate of Completion</div>
-          <div className="cert-plan">{c.planName}</div>
+          <div className="cert-label">Certificate</div>
+          <div className="cert-plan">Certified: {c.planName}</div>
           <div className="cert-date">Issued {c.date}</div>
         </div>
       ))}
@@ -977,37 +977,40 @@ function App(){
 
   const toggleLesson = (planId, missionIdx, lessonIdx) => {
     const total = lessonCount(planId, missionIdx);
-    let becameComplete = false;
-    setLessonsDone(prev => {
-      const existing = prev[planId]?.[missionIdx] || Array(total).fill(false);
-      if (existing[lessonIdx]) return prev;
-      const newArr = [...existing];
-      while (newArr.length < total) newArr.push(false);
-      newArr[lessonIdx] = true;
-      if (newArr.filter(Boolean).length === total) becameComplete = true;
+    // Read current state from closure — NOT from inside updater (async race).
+    const existing = lessonsDone[planId]?.[missionIdx] || Array(total).fill(false);
+    if (existing[lessonIdx]) return;
+    const newArr = [...existing];
+    while (newArr.length < total) newArr.push(false);
+    newArr[lessonIdx] = true;
+    const becameComplete = newArr.filter(Boolean).length === total;
 
+    setLessonsDone(prev => {
       const planMap = { ...(prev[planId] || {}) };
       planMap[missionIdx] = newArr;
       return { ...prev, [planId]: planMap };
     });
+
     if (becameComplete) {
-      // Defer so lessonsDone state has committed
-      queueMicrotask(() => awardMissionXP(planId, missionIdx));
+      // setTimeout(0) lets React commit the lesson state before XP awards
+      setTimeout(() => awardMissionXP(planId, missionIdx), 0);
     }
   };
 
   const completeEntireMission = (planId, missionIdx) => {
     const total = lessonCount(planId, missionIdx);
-    let wasIncomplete = false;
+    // Read current state from closure — NOT from inside updater (async race).
+    const existing = lessonsDone[planId]?.[missionIdx] || Array(total).fill(false);
+    if (existing.filter(Boolean).length === total) return;
+
     setLessonsDone(prev => {
-      const existing = prev[planId]?.[missionIdx] || Array(total).fill(false);
-      if (existing.filter(Boolean).length === total) return prev;
-      wasIncomplete = true;
       const planMap = { ...(prev[planId] || {}) };
       planMap[missionIdx] = Array(total).fill(true);
       return { ...prev, [planId]: planMap };
     });
-    if (wasIncomplete) queueMicrotask(() => awardMissionXP(planId, missionIdx));
+
+    // setTimeout(0) lets React commit the lesson state before XP awards
+    setTimeout(() => awardMissionXP(planId, missionIdx), 0);
   };
 
   const handleAllMissionsTap = (planId, missionIdx, type) => {
