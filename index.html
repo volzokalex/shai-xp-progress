@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shai — XP Progress Prototype</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Shai — Progress System v2</title>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -12,366 +12,509 @@
     --bg:#0B0F1A;
     --panel:#141B2D;
     --panel-2:#1B2341;
+    --panel-3:#22284A;
     --border:#2A3354;
     --border-glow:#3D4A7A;
     --text:#E8ECFF;
     --muted:#8A94B8;
+    --dim:#5F6A94;
     --accent:#7C3AED;
     --accent-2:#22D3EE;
+    --accent-3:#EC4899;
     --foundation:#5EEAD4;
     --builder:#FCD34D;
     --expert:#F472B6;
-    --seed:#10B981;
-    --flame:#F97316;
-    --crystal:#A78BFA;
     --warn:#EF4444;
     --good:#22C55E;
+    --gold:#FDE68A;
   }
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
   html,body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100%;overflow-x:hidden;}
-  body{background:radial-gradient(ellipse at top,#1a1f3a 0%,#0B0F1A 60%);}
-  #root{max-width:480px;margin:0 auto;padding:16px 14px 40px;}
+  body{background:radial-gradient(ellipse at top,#1a1f3a 0%,#0B0F1A 60%);padding-bottom:78px;}
+  #root{max-width:480px;margin:0 auto;padding:14px 14px 0;position:relative;}
+  button{font-family:inherit;}
 
-  /* ── Headings ── */
-  .title{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;}
+  /* Top brand */
+  .top-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding:2px 2px;}
+  .brand{font-size:16px;font-weight:900;letter-spacing:1px;background:linear-gradient(90deg,#22D3EE,#7C3AED);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .brand-tag{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+
   .panel{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px;}
+  .title{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;}
 
-  /* ── Mission slots ── */
+  /* Progress bar */
+  .level-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+  .level-name{font-size:20px;font-weight:800;letter-spacing:.5px;background:linear-gradient(90deg,var(--accent-2),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .level-num{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;}
+  .xp-counter{font-size:11px;color:var(--muted);text-align:right;}
+  .bar-wrap{position:relative;height:18px;background:var(--panel-2);border-radius:10px;overflow:hidden;border:1px solid var(--border);}
+  .bar-fill{height:100%;background:linear-gradient(90deg,#22D3EE 0%,#7C3AED 50%,#EC4899 100%);border-radius:10px;transition:width .7s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 18px rgba(124,58,237,.4);position:relative;}
+  .bar-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);animation:shimmer 2s infinite;}
+  @keyframes shimmer{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+  .xp-popup{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:28px;font-weight:900;color:var(--gold);text-shadow:0 0 16px rgba(252,211,77,.8),0 2px 8px rgba(0,0,0,.6);pointer-events:none;animation:xpPop 1.2s cubic-bezier(.2,.8,.2,1) forwards;letter-spacing:1px;z-index:5;white-space:nowrap;}
+  @keyframes xpPop{0%{transform:translate(-50%,-50%) scale(.3);opacity:0;}20%{transform:translate(-50%,-50%) scale(1.3);opacity:1;}60%{transform:translate(-50%,-100%) scale(1.1);opacity:1;}100%{transform:translate(-50%,-200%) scale(.9);opacity:0;}}
+  .total-xp{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:6px;}
+
+  /* Plans list */
+  .plan-card{background:linear-gradient(145deg,var(--panel-2),var(--panel));border:1.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;transition:border-color .15s,transform .1s;}
+  .plan-card:active{transform:scale(.98);}
+  .plan-card:hover{border-color:var(--border-glow);}
+  .plan-name-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;}
+  .plan-name{font-size:15px;font-weight:800;}
+  .plan-sub{font-size:11px;color:var(--muted);margin-bottom:10px;}
+  .plan-compo{display:flex;gap:6px;font-size:10px;font-weight:700;margin-bottom:10px;}
+  .plan-chip{padding:3px 7px;border-radius:6px;letter-spacing:.3px;}
+  .plan-chip.f{background:rgba(94,234,212,.15);color:var(--foundation);}
+  .plan-chip.b{background:rgba(252,211,77,.15);color:var(--builder);}
+  .plan-chip.e{background:rgba(244,114,182,.15);color:var(--expert);}
+  .plan-progress{display:flex;align-items:center;gap:8px;}
+  .plan-pbar{flex:1;height:6px;background:var(--panel-3);border-radius:3px;overflow:hidden;}
+  .plan-pfill{height:100%;background:linear-gradient(90deg,var(--accent-2),var(--accent));transition:width .6s;}
+  .plan-pct{font-size:11px;color:var(--muted);font-weight:700;min-width:44px;text-align:right;}
+  .plan-cert-badge{font-size:9px;background:var(--gold);color:#000;padding:2px 6px;border-radius:5px;font-weight:900;letter-spacing:.5px;}
+
+  .config-btn{width:100%;padding:11px;background:transparent;border:1.5px dashed var(--border);border-radius:10px;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:border-color .15s,color .15s;margin-top:4px;}
+  .config-btn:hover{border-color:var(--accent-2);color:var(--accent-2);}
+
+  /* Back bar */
+  .back-bar{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .back-btn{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;}
+  .back-btn:hover{border-color:var(--accent-2);}
+  .back-title{font-size:14px;font-weight:800;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+  /* Mission map */
+  .map{padding:10px 0 10px;}
+  .map-row{display:flex;align-items:center;gap:12px;padding:6px 4px;}
+  .node{width:82px;display:flex;flex-direction:column;align-items:center;gap:5px;}
+  .node-btn{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;cursor:pointer;border:3px solid;position:relative;transition:transform .15s;user-select:none;}
+  .node-btn:active{transform:scale(.92);}
+  .node-btn.completed{background:var(--good);border-color:var(--good);color:#fff;box-shadow:0 0 16px rgba(34,197,94,.5);}
+  .node-btn.foundation{background:rgba(94,234,212,.15);border-color:var(--foundation);color:var(--foundation);}
+  .node-btn.builder{background:rgba(252,211,77,.15);border-color:var(--builder);color:var(--builder);}
+  .node-btn.expert{background:rgba(244,114,182,.15);border-color:var(--expert);color:var(--expert);}
+  .node-btn.partial::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:2px dashed var(--accent-2);opacity:.7;animation:spin 8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .node-type{font-size:8px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;}
+  .node-type.foundation{color:var(--foundation);}
+  .node-type.builder{color:var(--builder);}
+  .node-type.expert{color:var(--expert);}
+  .node-label{font-size:10px;text-align:center;line-height:1.25;color:var(--text);font-weight:600;min-height:24px;}
+
+  /* Lesson view */
+  .mission-summary{background:var(--panel-2);border-radius:12px;padding:12px;margin-bottom:14px;}
+  .mission-summary-row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;}
+  .mission-summary-title{font-size:13px;font-weight:800;flex:1;}
+  .mission-summary-type{font-size:9px;letter-spacing:1px;text-transform:uppercase;font-weight:800;padding:3px 8px;border-radius:6px;white-space:nowrap;}
+  .mission-summary-xp{font-size:11px;color:var(--muted);}
+
+  .lesson-list{display:flex;flex-direction:column;gap:8px;}
+  .lesson-row{display:flex;align-items:center;gap:12px;padding:12px;background:var(--panel-2);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:border-color .15s,transform .1s;}
+  .lesson-row:active{transform:scale(.98);}
+  .lesson-row:hover{border-color:var(--border-glow);}
+  .lesson-row.done{border-color:var(--good);background:rgba(34,197,94,.08);}
+  .lesson-circle{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;border:2px solid var(--border);color:var(--muted);flex-shrink:0;}
+  .lesson-circle.done{border-color:var(--good);background:var(--good);color:#000;}
+  .lesson-label{font-size:13px;font-weight:700;}
+  .lesson-sub{font-size:10px;color:var(--muted);}
+
+  .mission-done-banner{margin-top:14px;padding:12px;background:rgba(34,197,94,.12);border:1px solid var(--good);border-radius:10px;text-align:center;}
+  .mission-done-title{font-size:12px;color:var(--good);font-weight:800;letter-spacing:1px;text-transform:uppercase;}
+  .mission-done-xp{font-size:11px;color:var(--muted);margin-top:4px;}
+
+  /* All Missions */
+  .flat-mission{display:flex;align-items:center;gap:10px;padding:11px;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,transform .1s;}
+  .flat-mission:active{transform:scale(.98);}
+  .flat-mission.done{border-color:var(--good);background:rgba(34,197,94,.08);}
+  .flat-mission.locked{opacity:.9;}
+  .flat-type-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .flat-type-dot.foundation{background:var(--foundation);box-shadow:0 0 8px var(--foundation);}
+  .flat-type-dot.builder{background:var(--builder);box-shadow:0 0 8px var(--builder);}
+  .flat-type-dot.expert{background:var(--expert);box-shadow:0 0 8px var(--expert);}
+  .flat-info{flex:1;min-width:0;}
+  .flat-name{font-size:13px;font-weight:700;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .flat-plan{font-size:10px;color:var(--muted);}
+  .flat-right{font-size:13px;color:var(--muted);font-weight:700;min-width:20px;text-align:center;}
+  .flat-right.lock{font-size:14px;}
+  .flat-right.done{color:var(--good);font-size:16px;}
+
+  /* Rewards vault */
+  .rewards-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+  .reward-card{background:linear-gradient(145deg,var(--panel-2),var(--panel));border:1.5px solid var(--border);border-radius:14px;padding:18px 10px;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;overflow:hidden;cursor:pointer;transition:border-color .15s,transform .1s;}
+  .reward-card:active{transform:scale(.97);}
+  .reward-card.unseen{border-color:var(--accent-2);box-shadow:0 0 18px rgba(34,211,238,.3);}
+  .reward-card.unseen::before{content:'NEW';position:absolute;top:6px;right:6px;background:var(--accent-2);color:#000;font-size:9px;font-weight:900;padding:2px 6px;border-radius:4px;letter-spacing:.5px;}
+  .reward-icon{font-size:40px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.4));}
+  .reward-name{font-size:12px;font-weight:800;text-align:center;line-height:1.25;}
+  .reward-level{font-size:9px;color:var(--muted);letter-spacing:1px;font-weight:700;text-transform:uppercase;}
+
+  /* Certificates */
+  .cert-card{background:linear-gradient(145deg,#2A2048,#1B1A3A);border:2px solid var(--gold);border-radius:14px;padding:18px 14px;margin-bottom:10px;position:relative;overflow:hidden;}
+  .cert-card::before{content:'';position:absolute;inset:-40%;background:radial-gradient(circle at 50% 0%,rgba(253,230,138,.2),transparent 60%);pointer-events:none;}
+  .cert-seal{position:absolute;top:10px;right:12px;font-size:24px;}
+  .cert-label{font-size:9px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;font-weight:800;margin-bottom:6px;position:relative;z-index:1;}
+  .cert-plan{font-size:16px;font-weight:900;margin-bottom:4px;position:relative;z-index:1;}
+  .cert-date{font-size:10px;color:var(--muted);position:relative;z-index:1;}
+
+  /* Empty state */
+  .empty{text-align:center;padding:50px 20px;color:var(--muted);}
+  .empty-icon{font-size:44px;opacity:.35;margin-bottom:12px;}
+  .empty-msg{font-size:13px;line-height:1.5;max-width:300px;margin:0 auto;}
+
+  /* Bottom nav */
+  .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(11,15,26,.95);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:flex;z-index:40;}
+  .bnav-btn{flex:1;background:none;border:none;color:var(--muted);padding:10px 4px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;position:relative;transition:color .15s;}
+  .bnav-btn.active{color:var(--accent-2);}
+  .bnav-btn.active::before{content:'';position:absolute;top:0;left:25%;right:25%;height:2px;background:var(--accent-2);border-radius:0 0 2px 2px;}
+  .bnav-icon{font-size:20px;}
+  .bnav-label{font-size:9px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;}
+  .bnav-badge{position:absolute;top:6px;right:18%;min-width:16px;height:16px;background:var(--expert);color:#000;font-size:9px;font-weight:900;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 4px;}
+
+  /* Configurator */
+  .config-plan-switch{display:flex;gap:6px;margin-bottom:12px;}
+  .config-plan-tab{flex:1;padding:8px 4px;background:var(--panel-2);border:1.5px solid var(--border);border-radius:8px;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;letter-spacing:.3px;transition:all .15s;}
+  .config-plan-tab.active{background:var(--panel-3);color:var(--text);border-color:var(--accent);}
   .slots{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;}
-  .slot{aspect-ratio:1;border:1.5px solid var(--border);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:10px;font-weight:700;transition:transform .1s,border-color .15s;user-select:none;position:relative;}
+  .slot{aspect-ratio:1;border:1.5px solid var(--border);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-weight:700;transition:transform .1s,border-color .15s;user-select:none;position:relative;padding:2px;}
   .slot:active{transform:scale(.94);}
-  .slot-num{font-size:9px;color:var(--muted);font-weight:600;margin-bottom:2px;}
-  .slot-type{font-size:10px;letter-spacing:.3px;}
   .slot.foundation{border-color:var(--foundation);color:var(--foundation);background:rgba(94,234,212,.08);}
   .slot.builder{border-color:var(--builder);color:var(--builder);background:rgba(252,211,77,.08);}
   .slot.expert{border-color:var(--expert);color:var(--expert);background:rgba(244,114,182,.08);}
-
-  /* ── XP info ── */
-  .xp-info{display:flex;justify-content:space-between;gap:8px;margin-top:12px;font-size:12px;}
+  .slot.locked{cursor:not-allowed;opacity:.7;}
+  .slot-num{font-size:9px;color:var(--muted);font-weight:600;margin-bottom:2px;}
+  .slot-type{font-size:11px;letter-spacing:.3px;}
+  .slot-lock{position:absolute;top:2px;right:2px;font-size:9px;opacity:.7;}
+  .xp-info{display:flex;justify-content:space-between;gap:8px;margin-top:14px;font-size:12px;}
   .xp-info-item{flex:1;background:var(--panel-2);border-radius:8px;padding:8px 6px;text-align:center;}
   .xp-info-label{font-size:9px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:3px;}
   .xp-info-value{font-size:13px;font-weight:700;}
   .total-row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:10px 12px;background:var(--panel-2);border-radius:10px;}
   .total-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
-  .total-value{font-size:18px;font-weight:800;}
-  .total-value.warn{color:var(--warn);}
-  .total-value.good{color:var(--good);}
-  .warn-msg{font-size:10px;color:var(--warn);margin-top:6px;text-align:center;}
-
+  .total-value{font-size:18px;font-weight:800;color:var(--good);}
   .play-again{width:100%;margin-top:10px;padding:11px;background:transparent;border:1.5px solid var(--border);border-radius:10px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;transition:border-color .15s,color .15s;}
-  .play-again:hover{border-color:var(--accent-2);color:var(--accent-2);}
+  .play-again:hover{border-color:var(--warn);color:var(--warn);}
 
-  /* ── Progress bar ── */
-  .level-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
-  .level-name{font-size:20px;font-weight:800;letter-spacing:.5px;background:linear-gradient(90deg,var(--accent-2),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent;}
-  .level-num{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;}
-  .xp-counter{font-size:11px;color:var(--muted);}
-  .bar-wrap{position:relative;height:20px;background:var(--panel-2);border-radius:12px;overflow:hidden;border:1px solid var(--border);}
-  .bar-fill{height:100%;background:linear-gradient(90deg,#22D3EE 0%,#7C3AED 50%,#EC4899 100%);border-radius:12px;transition:width .8s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 20px rgba(124,58,237,.5);position:relative;}
-  .bar-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);animation:shimmer 2s infinite;}
-  @keyframes shimmer{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
-
-  .xp-popup{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:32px;font-weight:900;color:#FDE68A;text-shadow:0 0 20px rgba(252,211,77,.8),0 2px 8px rgba(0,0,0,.6);pointer-events:none;animation:xpPop 1.2s cubic-bezier(.2,.8,.2,1) forwards;letter-spacing:1px;}
-  @keyframes xpPop{0%{transform:translate(-50%,-50%) scale(.3);opacity:0;}20%{transform:translate(-50%,-50%) scale(1.3);opacity:1;}60%{transform:translate(-50%,-100%) scale(1.1);opacity:1;}100%{transform:translate(-50%,-200%) scale(.9);opacity:0;}}
-
-  /* ── Tabs ── */
-  .tabs{display:flex;gap:6px;margin:16px 0 12px;}
-  .tab{flex:1;padding:11px;background:var(--panel);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;letter-spacing:.5px;text-transform:uppercase;transition:all .15s;position:relative;}
-  .tab.active{background:var(--panel-2);color:var(--text);border-color:var(--accent);}
-  .tab-badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;background:var(--expert);color:#000;font-size:10px;font-weight:900;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px;}
-
-  /* ── Mission map ── */
-  .map{position:relative;padding:12px 0 20px;}
-  .map-row{display:flex;align-items:center;margin-bottom:4px;}
-  .map-row.left{justify-content:flex-start;}
-  .map-row.right{justify-content:flex-end;}
-  .map-row.center{justify-content:center;}
-  .node{width:82px;display:flex;flex-direction:column;align-items:center;gap:6px;}
-  .node-btn{width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;cursor:pointer;border:3px solid;position:relative;transition:transform .15s;user-select:none;}
-  .node-btn:active{transform:scale(.92);}
-  .node-btn.disabled{cursor:not-allowed;opacity:.5;}
-  .node-btn.completed{background:var(--good);border-color:var(--good);color:#fff;box-shadow:0 0 18px rgba(34,197,94,.5);}
-  .node-btn.foundation{background:rgba(94,234,212,.15);border-color:var(--foundation);color:var(--foundation);}
-  .node-btn.builder{background:rgba(252,211,77,.15);border-color:var(--builder);color:var(--builder);}
-  .node-btn.expert{background:rgba(244,114,182,.15);border-color:var(--expert);color:var(--expert);}
-  .node-btn.active{animation:pulse 1.8s infinite;}
-  @keyframes pulse{0%,100%{box-shadow:0 0 0 rgba(124,58,237,.6);}50%{box-shadow:0 0 0 8px rgba(124,58,237,0);}}
-  .node-label{font-size:10px;text-align:center;line-height:1.25;color:var(--text);font-weight:600;min-height:24px;}
-  .node-type{font-size:8px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;}
-  .node-type.foundation{color:var(--foundation);}
-  .node-type.builder{color:var(--builder);}
-  .node-type.expert{color:var(--expert);}
-
-  /* ── Cards ── */
-  .cards-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
-  .card{background:linear-gradient(145deg,var(--panel-2),var(--panel));border:1.5px solid var(--border);border-radius:14px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;overflow:hidden;}
-  .card.seed{border-color:var(--seed);}
-  .card.flame{border-color:var(--flame);}
-  .card.crystal{border-color:var(--crystal);}
-  .card::before{content:'';position:absolute;inset:-50%;background:radial-gradient(circle at 50% 0%,var(--glow),transparent 60%);opacity:.25;pointer-events:none;}
-  .card.seed{--glow:var(--seed);}
-  .card.flame{--glow:var(--flame);}
-  .card.crystal{--glow:var(--crystal);}
-  .card-icon{font-size:36px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.4));}
-  .card-level{font-size:9px;color:var(--muted);letter-spacing:1px;font-weight:700;text-transform:uppercase;}
-  .card-name{font-size:12px;font-weight:700;text-align:center;line-height:1.25;}
-  .card-date{font-size:9px;color:var(--muted);margin-top:2px;}
-  .empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;}
-  .empty-icon{font-size:40px;opacity:.4;margin-bottom:10px;}
-
-  /* ── Level-up overlay ── */
+  /* Level-up overlay */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;backdrop-filter:blur(8px);animation:fadeIn .3s;}
   @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
-  .overlay-inner{max-width:340px;width:100%;text-align:center;}
-  .overlay-title{font-size:13px;color:var(--accent-2);letter-spacing:3px;font-weight:800;text-transform:uppercase;margin-bottom:8px;animation:fadeSlide .6s .1s both;}
-  .overlay-name{font-size:36px;font-weight:900;margin-bottom:30px;background:linear-gradient(90deg,var(--accent-2),var(--accent),#EC4899);-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:1px;animation:fadeSlide .6s .2s both;}
+  .overlay-inner{max-width:340px;width:100%;text-align:center;position:relative;z-index:2;}
+  .overlay-title{font-size:13px;color:var(--accent-2);letter-spacing:3px;font-weight:800;text-transform:uppercase;margin-bottom:4px;animation:fadeSlide .6s .1s both;}
+  .overlay-level{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:3px;margin-bottom:4px;animation:fadeSlide .6s .15s both;}
+  .overlay-name{font-size:34px;font-weight:900;margin-bottom:24px;background:linear-gradient(90deg,var(--accent-2),var(--accent),#EC4899);-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:1px;animation:fadeSlide .6s .2s both;}
   @keyframes fadeSlide{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
-  .big-card{background:linear-gradient(145deg,var(--panel-2),var(--panel));border:2px solid;border-radius:20px;padding:30px 20px;position:relative;overflow:hidden;animation:cardReveal .8s .4s both cubic-bezier(.2,.8,.2,1);}
-  .big-card.seed{border-color:var(--seed);box-shadow:0 0 50px rgba(16,185,129,.4);}
-  .big-card.flame{border-color:var(--flame);box-shadow:0 0 50px rgba(249,115,22,.4);}
-  .big-card.crystal{border-color:var(--crystal);box-shadow:0 0 50px rgba(167,139,250,.4);}
+  .big-reward{background:linear-gradient(145deg,var(--panel-2),var(--panel));border:2px solid var(--accent-2);border-radius:20px;padding:28px 20px;position:relative;overflow:hidden;animation:cardReveal .8s .4s both cubic-bezier(.2,.8,.2,1);box-shadow:0 0 50px rgba(34,211,238,.4);}
   @keyframes cardReveal{from{opacity:0;transform:scale(.6) rotate(-10deg);}to{opacity:1;transform:scale(1) rotate(0);}}
-  .big-card-icon{font-size:80px;margin-bottom:12px;filter:drop-shadow(0 8px 20px rgba(0,0,0,.5));animation:float 3s ease-in-out infinite;}
+  .big-reward-icon{font-size:78px;margin-bottom:12px;filter:drop-shadow(0 8px 20px rgba(0,0,0,.5));animation:float 3s ease-in-out infinite;}
   @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
-  .big-card-style{font-size:10px;letter-spacing:2.5px;font-weight:800;margin-bottom:6px;text-transform:uppercase;}
-  .big-card-style.seed{color:var(--seed);}
-  .big-card-style.flame{color:var(--flame);}
-  .big-card-style.crystal{color:var(--crystal);}
-  .big-card-skill{font-size:20px;font-weight:800;margin-bottom:6px;}
-  .big-card-lv{font-size:11px;color:var(--muted);letter-spacing:1px;}
-  .dismiss{margin-top:24px;width:100%;padding:14px;background:linear-gradient(90deg,var(--accent),var(--accent-2));border:none;border-radius:12px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:1px;text-transform:uppercase;animation:fadeSlide .6s 1s both;}
+  .big-reward-tag{font-size:10px;letter-spacing:2.5px;font-weight:800;margin-bottom:8px;text-transform:uppercase;color:var(--accent-2);}
+  .big-reward-name{font-size:22px;font-weight:800;margin-bottom:8px;}
+  .big-reward-lv{font-size:11px;color:var(--muted);letter-spacing:1px;}
+  .dismiss{margin-top:22px;width:100%;padding:14px;background:linear-gradient(90deg,var(--accent),var(--accent-2));border:none;border-radius:12px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:1px;text-transform:uppercase;animation:fadeSlide .6s .9s both;}
   .dismiss:active{transform:scale(.97);}
+  .queue-ind{font-size:10px;color:var(--muted);margin-top:14px;letter-spacing:1px;animation:fadeSlide .6s 1s both;}
 
-  /* Confetti particles */
-  .particles{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+  /* Confetti */
+  .particles{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1;}
   .particle{position:absolute;width:8px;height:8px;border-radius:50%;animation:particleFloat 2.5s linear infinite;}
   @keyframes particleFloat{0%{transform:translateY(100vh) scale(0);opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{transform:translateY(-20vh) scale(1);opacity:0;}}
+
+  /* Expert lock popup */
+  .lock-popup{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:90;padding:24px;backdrop-filter:blur(6px);animation:fadeIn .2s;}
+  .lock-inner{max-width:340px;width:100%;background:var(--panel);border:2px solid var(--expert);border-radius:18px;padding:24px 20px;text-align:center;}
+  .lock-icon{font-size:48px;margin-bottom:10px;}
+  .lock-title{font-size:13px;color:var(--expert);letter-spacing:2px;text-transform:uppercase;font-weight:800;margin-bottom:10px;}
+  .lock-msg{font-size:13px;line-height:1.55;color:var(--text);margin-bottom:18px;}
+  .lock-close{width:100%;padding:12px;background:var(--panel-2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px;text-transform:uppercase;}
+  .lock-close:hover{border-color:var(--expert);color:var(--expert);}
 </style>
 </head>
 <body>
 <div id="root"></div>
 
 <script type="text/babel">
-const { useState, useEffect, useMemo, useRef } = React;
+const { useState, useEffect, useMemo, useRef, useCallback } = React;
 
-// ─────────── Constants ───────────
-
-const MISSION_NAMES = [
-  'Your First AI Prompt',
-  'Automate Your Inbox',
-  'Build a Landing Page',
-  'Create an AI Avatar Reel',
-  'Write a Sales Email with AI',
-  'Analyze Data with Claude',
-  'Generate a Content Plan',
-  'Build a No-Code App',
-  'AI Research Assistant',
-  'Automate Social Media',
-  'Client Report Automation',
-  'Full AI Workflow — Capstone',
-];
+/* ─────────── Constants ─────────── */
 
 const WEIGHTS = { Foundation: 1, Builder: 2.5, Expert: 4.5 };
-const TARGET_XP = 5950;
+const TARGET_XP = 5950; // Total XP per full plan
 
-// Option B — dynamic XP based on plan composition
-function computeXPByType(types){
-  const totalWeight = types.reduce((s, t) => s + WEIGHTS[t], 0);
-  if (totalWeight === 0) return { Foundation:0, Builder:0, Expert:0 };
-  const perWeight = TARGET_XP / totalWeight;
-  return {
-    Foundation: Math.round(perWeight * WEIGHTS.Foundation),
-    Builder:    Math.round(perWeight * WEIGHTS.Builder),
-    Expert:     Math.round(perWeight * WEIGHTS.Expert),
-  };
+const LEVEL_RANGES = [
+  { max: 3,  name: 'Curious'   },
+  { max: 6,  name: 'Explorer'  },
+  { max: 10, name: 'Prompter'  },
+  { max: 15, name: 'Builder'   },
+  { max: 20, name: 'Operator'  },
+  { max: 24, name: 'Optimizer' },
+  { max: Infinity, name: 'Legend' },
+];
+
+// XP needed to go FROM level n TO level n+1
+function xpToNext(n){
+  if (n < 1) return 100;
+  const early = [100, 150, 200, 250, 400, 550, 700, 900, 1200];
+  if (n <= 9) return early[n-1];
+  // L10+ linear growth: 1500, 1750, 2000, ...
+  return 1500 + (n - 10) * 250;
 }
 
-// Default composition: 2F + 4B + 6E = 6,100 XP (reaches Level 10)
-const DEFAULT_TYPES = [
-  'Foundation','Foundation',
-  'Builder','Builder','Builder','Builder',
-  'Expert','Expert','Expert','Expert','Expert','Expert'
-];
+// Cumulative XP to ENTER a level. xpToEnter(1) = 0
+const ENTER_CACHE = [0, 0];
+function xpToEnter(level){
+  if (level <= 1) return 0;
+  if (ENTER_CACHE[level] !== undefined) return ENTER_CACHE[level];
+  const val = xpToEnter(level - 1) + xpToNext(level - 1);
+  ENTER_CACHE[level] = val;
+  return val;
+}
 
-// Level curve (XP to complete that level)
-const LEVELS = [
-  { level:1, name:'Curious',     xpToNext:100 },
-  { level:2, name:'Explorer',    xpToNext:150 },
-  { level:3, name:'Prompter',    xpToNext:200 },
-  { level:4, name:'Builder',     xpToNext:250 },
-  { level:5, name:'Operator',    xpToNext:400 },
-  { level:6, name:'Optimizer',   xpToNext:550 },
-  { level:7, name:'Trailblazer', xpToNext:700 },
-  { level:8, name:'Architect',   xpToNext:900 },
-  { level:9, name:'Visionary',   xpToNext:1200 },
-  { level:10,name:'Legend',      xpToNext:1500 },
-];
-
-// Cumulative threshold at which you ENTER this level
-const LEVEL_THRESHOLDS = (() => {
-  const arr = [0]; let sum = 0;
-  for (let i = 0; i < LEVELS.length - 1; i++) { sum += LEVELS[i].xpToNext; arr.push(sum); }
-  return arr; // [0, 100, 250, 450, 700, 1100, 1650, 2350, 3250, 4450]
-})();
-
-const SKILL_NAMES = [
-  'First Prompt Written',
-  'AI Tool Basics Mastered',
-  'Prompt Engineering',
-  'Content Automation',
-  'Workflow Integration',
-  'Advanced Prompting',
-  'Multi-Tool Pipelines',
-  'AI System Design',
-  'Strategic AI Leadership',
-  'AI Mastery Achieved',
-];
-
-const MIN_PLAN_XP = 5950;
-
-// ─────────── Helpers ───────────
-
-function getLevelFromXP(xp){
+function getLevel(xp){
   let lv = 1;
-  for (let i = 0; i < LEVEL_THRESHOLDS.length; i++) {
-    if (xp >= LEVEL_THRESHOLDS[i]) lv = i + 1;
+  while (xp >= xpToEnter(lv + 1)) {
+    lv++;
+    if (lv > 200) break;
   }
   return lv;
 }
-function getLevelProgress(xp, level){
-  const start = LEVEL_THRESHOLDS[level-1] || 0;
-  const need = LEVELS[level-1].xpToNext;
+function getLevelName(lv){
+  for (const r of LEVEL_RANGES) if (lv <= r.max) return r.name;
+  return 'Legend';
+}
+function getLevelProgress(xp, lv){
+  const start = xpToEnter(lv);
+  const need = xpToNext(lv);
   const within = Math.max(0, xp - start);
-  const pct = Math.min(100, (within / need) * 100);
-  return { within, need, pct };
+  return { within, need, pct: Math.min(100, (within / need) * 100) };
 }
-function styleForLevel(lv){
-  if (lv <= 3) return 'seed';
-  if (lv <= 7) return 'flame';
-  return 'crystal';
+
+// Rewards — one per level (content manager assets for demo)
+const REWARDS = [
+  { level:1,  name:'First Spark',        icon:'✨' },
+  { level:2,  name:'Curious Mind',       icon:'🔍' },
+  { level:3,  name:'Apprentice',         icon:'📝' },
+  { level:4,  name:'Trailhead',          icon:'🧭' },
+  { level:5,  name:'Pathfinder',         icon:'🗺️' },
+  { level:6,  name:'Discovery',          icon:'💡' },
+  { level:7,  name:'Prompt Crafter',     icon:'✍️' },
+  { level:8,  name:'Context Weaver',     icon:'🧶' },
+  { level:9,  name:'Pattern Reader',     icon:'📚' },
+  { level:10, name:'Prompt Sage',        icon:'🌟' },
+  { level:11, name:'Toolsmith',          icon:'🛠️' },
+  { level:12, name:'Architect',          icon:'🏗️' },
+  { level:13, name:'Framework Thinker',  icon:'🧠' },
+  { level:14, name:'System Designer',    icon:'🔷' },
+  { level:15, name:'Master Builder',     icon:'🏛️' },
+  { level:16, name:'Operator',           icon:'⚡' },
+  { level:17, name:'Workflow Pro',       icon:'🔄' },
+  { level:18, name:'Automation Wizard',  icon:'🤖' },
+  { level:19, name:'Pipeline Master',    icon:'🚀' },
+  { level:20, name:'Command Chief',      icon:'💠' },
+  { level:21, name:'Optimizer',          icon:'📈' },
+  { level:22, name:'Efficiency Guru',    icon:'🎯' },
+  { level:23, name:'Refiner',            icon:'💎' },
+  { level:24, name:'Peak Performer',     icon:'🏆' },
+  { level:25, name:'Legend',             icon:'👑' },
+  { level:26, name:'Mythmaker',          icon:'🌌' },
+  { level:27, name:'Oracle',             icon:'🔮' },
+  { level:28, name:'Visionary',          icon:'🌠' },
+  { level:29, name:'Titan',              icon:'🦾' },
+  { level:30, name:'Immortal',           icon:'♾️' },
+];
+function getRewardForLevel(lv){
+  const found = REWARDS.find(r => r.level === lv);
+  if (found) return { level: lv, name: found.name, icon: found.icon };
+  return { level: lv, name: 'Legend Lv ' + lv, icon: '👑' };
 }
-function iconForStyle(style){
-  return style === 'seed' ? '🌱' : style === 'flame' ? '🔥' : '💎';
+
+// Plan definitions — each has distinct composition (mission 12 always Expert)
+const PLAN_DEFS = [
+  {
+    id: 0,
+    name: 'AI Foundations',
+    subtitle: 'For total beginners',
+    defaultTypes: [
+      'Foundation','Foundation','Foundation','Foundation','Foundation','Foundation',
+      'Builder','Builder','Builder','Builder',
+      'Expert','Expert'
+    ],
+    missionNames: [
+      'Your First Prompt','Chat Interfaces 101','Writing with AI',
+      'AI for Email','Basic Image Gen','Summarize Anything',
+      'Research Helper','Meeting Notes','Content Planner',
+      'Social Posts with AI','Study Buddy','Personal AI Workflow'
+    ],
+  },
+  {
+    id: 1,
+    name: 'Content Creator OS',
+    subtitle: 'Build a content machine',
+    defaultTypes: [
+      'Foundation','Foundation','Foundation',
+      'Builder','Builder','Builder','Builder','Builder','Builder',
+      'Expert','Expert','Expert'
+    ],
+    missionNames: [
+      'Content Brief Gen','Hook Writer','Thumbnail Ideas',
+      'Short Script Pipeline','Brand Voice Prompt','Carousel Factory',
+      'SEO Booster','Video Storyboard','Newsletter Engine',
+      'Launch Funnel','Full Content OS','Agency Toolkit'
+    ],
+  },
+  {
+    id: 2,
+    name: 'Business Automation',
+    subtitle: 'Advanced — commercial projects',
+    defaultTypes: [
+      'Foundation','Foundation',
+      'Builder','Builder','Builder','Builder',
+      'Expert','Expert','Expert','Expert','Expert','Expert'
+    ],
+    missionNames: [
+      'Process Mapping','Support Bot Brief','Lead Scoring Prompt',
+      'Invoice Automation','Sales Dashboards','Data Cleanup',
+      'Report Automator','CRM Sync','Pipeline Builder',
+      'Revenue Ops Stack','Customer Journey AI','End-to-End Automation'
+    ],
+  },
+];
+
+/* ─────────── Helpers ─────────── */
+
+// Deterministic lesson count per (plan, mission): 3–6 lessons
+function lessonCount(planId, missionIdx){
+  return 3 + ((planId * 5 + missionIdx * 3 + 1) % 4);
 }
+
+function xpForMission(types, missionIdx){
+  const totalWeight = types.reduce((s, t) => s + WEIGHTS[t], 0);
+  if (totalWeight === 0) return 0;
+  return Math.round((TARGET_XP / totalWeight) * WEIGHTS[types[missionIdx]]);
+}
+
+function computeXPByType(types){
+  const tw = types.reduce((s,t) => s + WEIGHTS[t], 0);
+  if (tw === 0) return { Foundation:0, Builder:0, Expert:0 };
+  const pw = TARGET_XP / tw;
+  return {
+    Foundation: Math.round(pw * WEIGHTS.Foundation),
+    Builder:    Math.round(pw * WEIGHTS.Builder),
+    Expert:     Math.round(pw * WEIGHTS.Expert),
+  };
+}
+
+function countBy(arr){
+  const c = { Foundation:0, Builder:0, Expert:0 };
+  arr.forEach(t => c[t]++);
+  return c;
+}
+
 function formatDate(d){
   const m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   return `${m[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 }
 
-// ─────────── Components ───────────
+/* ─────────── Components ─────────── */
 
-function PlanConfig({ types, setType, hasAnyCompleted, onPlayAgain, xpByType }) {
-  const counts = { Foundation:0, Builder:0, Expert:0 };
-  types.forEach(t => counts[t]++);
-  const total = counts.Foundation*xpByType.Foundation + counts.Builder*xpByType.Builder + counts.Expert*xpByType.Expert;
-
-  const cycle = (t) => t === 'Foundation' ? 'Builder' : t === 'Builder' ? 'Expert' : 'Foundation';
-
+function TopHead(){
   return (
-    <div className="panel">
-      <div className="title">Plan Configuration</div>
-      <div className="slots">
-        {types.map((t, i) => (
-          <div key={i}
-               className={`slot ${t.toLowerCase()}`}
-               onClick={() => !hasAnyCompleted && setType(i, cycle(t))}
-               style={{opacity: hasAnyCompleted ? .55 : 1, cursor: hasAnyCompleted ? 'not-allowed' : 'pointer'}}>
-            <div className="slot-num">Mission #{i+1}</div>
-            <div className="slot-type">{t.charAt(0)}</div>
-          </div>
-        ))}
+    <div className="top-head">
+      <div>
+        <div className="brand">SHAI</div>
+        <div className="brand-tag">Progress System · v2</div>
       </div>
-
-      <div className="title" style={{marginTop:14}}>Mission Type</div>
-      <div className="xp-info">
-        <div className="xp-info-item">
-          <div className="xp-info-label" style={{color:'var(--foundation)'}}>Foundation</div>
-          <div className="xp-info-value">{counts.Foundation} × {xpByType.Foundation}</div>
-        </div>
-        <div className="xp-info-item">
-          <div className="xp-info-label" style={{color:'var(--builder)'}}>Builder</div>
-          <div className="xp-info-value">{counts.Builder} × {xpByType.Builder}</div>
-        </div>
-        <div className="xp-info-item">
-          <div className="xp-info-label" style={{color:'var(--expert)'}}>Expert</div>
-          <div className="xp-info-value">{counts.Expert} × {xpByType.Expert}</div>
-        </div>
-      </div>
-
-      <div className="total-row">
-        <div className="total-label">Total Plan XP</div>
-        <div className="total-value good">{total.toLocaleString()} XP</div>
-      </div>
-      {hasAnyCompleted && <div className="warn-msg" style={{color:'var(--muted)'}}>Mission types locked during play. Tap Play Again to edit.</div>}
-
-      <button className="play-again" onClick={onPlayAgain}>↻ Play Again</button>
     </div>
   );
 }
 
 function ProgressBar({ xp, xpPopup }){
-  const level = getLevelFromXP(xp);
-  const { within, need, pct } = getLevelProgress(xp, level);
+  const lv = getLevel(xp);
+  const name = getLevelName(lv);
+  const { within, need, pct } = getLevelProgress(xp, lv);
   return (
     <div className="panel">
       <div className="level-head">
         <div>
-          <div className="level-num">LEVEL {level}</div>
-          <div className="level-name">{LEVELS[level-1].name}</div>
+          <div className="level-num">LEVEL {lv}</div>
+          <div className="level-name">{name}</div>
         </div>
-        <div className="xp-counter">{within} / {need} XP</div>
+        <div className="xp-counter">{within.toLocaleString()} / {need.toLocaleString()} XP</div>
       </div>
       <div className="bar-wrap">
-        <div className="bar-fill" style={{width: pct + '%'}}></div>
-        {xpPopup && <div className="xp-popup">+{xpPopup} XP</div>}
+        <div className="bar-fill" style={{ width: pct + '%' }}></div>
+        {xpPopup != null && <div className="xp-popup">+{xpPopup.toLocaleString()} XP</div>}
       </div>
-      <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'var(--muted)',marginTop:6}}>
-        <span>Total: {xp.toLocaleString()} XP</span>
-        <span>Max: {MIN_PLAN_XP.toLocaleString()} XP</span>
+      <div className="total-xp">
+        <span>Total XP: {xp.toLocaleString()}</span>
+        <span>Account-level · no cap</span>
       </div>
     </div>
   );
 }
 
-function MissionMap({ types, completed, onComplete }){
+function PlansList({ plans, progressByPlan, certs, onOpenPlan, onOpenConfig }){
+  return (
+    <div>
+      <div className="title" style={{paddingLeft:2}}>Your Plans · {plans.length} available</div>
+      {plans.map(p => {
+        const pr = progressByPlan[p.id] || { done: 0, total: 12 };
+        const pct = Math.round(pr.done / pr.total * 100);
+        const c = countBy(p.types);
+        const hasCert = certs.some(cc => cc.planId === p.id);
+        return (
+          <div key={p.id} className="plan-card" onClick={() => onOpenPlan(p.id)}>
+            <div className="plan-name-row">
+              <div className="plan-name">{p.name}</div>
+              {hasCert && <span className="plan-cert-badge">CERTIFIED</span>}
+            </div>
+            <div className="plan-sub">{p.subtitle}</div>
+            <div className="plan-compo">
+              <span className="plan-chip f">F × {c.Foundation}</span>
+              <span className="plan-chip b">B × {c.Builder}</span>
+              <span className="plan-chip e">E × {c.Expert}</span>
+            </div>
+            <div className="plan-progress">
+              <div className="plan-pbar">
+                <div className="plan-pfill" style={{ width: pct + '%' }}></div>
+              </div>
+              <div className="plan-pct">{pr.done}/{pr.total}</div>
+            </div>
+          </div>
+        );
+      })}
+      <button className="config-btn" onClick={onOpenConfig}>⚙ Configure Plans</button>
+    </div>
+  );
+}
+
+function MissionMap({ plan, missionState, onOpenMission }){
   const rows = [];
-  // zigzag: row pattern left(2), right(2), left(2), right(2), left(2), right(2) — 6 rows x 2
-  // Simpler: 12 nodes split into 6 rows of 2, alternating alignment
-  for (let r = 0; r < 6; r++){
-    const idx1 = r*2, idx2 = r*2+1;
-    const align = r % 2 === 0 ? 'row-left' : 'row-right';
-    rows.push({idx1, idx2, align});
-  }
+  for (let r = 0; r < 6; r++) rows.push([r*2, r*2+1]);
 
   const renderNode = (i) => {
-    const type = types[i].toLowerCase();
-    const done = completed[i];
-    const nextIdx = completed.findIndex(c => !c);
-    const isNext = nextIdx === i;
-    const disabled = done || !isNext;
+    const type = plan.types[i].toLowerCase();
+    const st = missionState[i] || { done:false, doneLessons:0, totalLessons:lessonCount(plan.id, i) };
+    const done = st.done;
+    const partial = !done && st.doneLessons > 0;
     return (
       <div className="node" key={i}>
-        <div className={`node-btn ${done ? 'completed' : type} ${isNext && !done ? 'active' : ''} ${disabled && !done ? 'disabled' : ''}`}
-             onClick={() => !disabled && onComplete(i)}>
+        <div className={`node-btn ${done ? 'completed' : type} ${partial ? 'partial' : ''}`}
+             onClick={() => onOpenMission(i)}>
           {done ? '✓' : (i+1)}
         </div>
-        <div className={`node-type ${type}`}>{types[i]}</div>
-        <div className="node-label">{MISSION_NAMES[i]}</div>
+        <div className={`node-type ${type}`}>{plan.types[i]}</div>
+        <div className="node-label">{plan.missionNames[i]}</div>
       </div>
     );
   };
 
   return (
     <div className="panel">
-      <div className="title">Mission Map — 12 missions</div>
+      <div className="title">Mission Map · 12 missions</div>
       <div className="map">
         {rows.map((row, ri) => (
-          <div key={ri} style={{display:'flex',justifyContent:ri%2===0?'flex-start':'flex-end',gap:12,padding:'8px 4px'}}>
-            {ri%2===0 ? (
-              <>{renderNode(row.idx1)}{renderNode(row.idx2)}</>
-            ) : (
-              <>{renderNode(row.idx2)}{renderNode(row.idx1)}</>
-            )}
+          <div key={ri} className="map-row" style={{ justifyContent: ri%2===0 ? 'flex-start' : 'flex-end' }}>
+            {ri % 2 === 0
+              ? (<>{renderNode(row[0])}{renderNode(row[1])}</>)
+              : (<>{renderNode(row[1])}{renderNode(row[0])}</>)}
           </div>
         ))}
       </div>
@@ -379,27 +522,115 @@ function MissionMap({ types, completed, onComplete }){
   );
 }
 
-function CardVault({ cards }){
-  if (cards.length === 0) {
+function LessonView({ plan, missionIdx, lessonsDone, onToggleLesson }){
+  const total = lessonCount(plan.id, missionIdx);
+  const t = plan.types[missionIdx];
+  const typeL = t.toLowerCase();
+  const xp = xpForMission(plan.types, missionIdx);
+  const doneCount = lessonsDone.filter(Boolean).length;
+  const allDone = doneCount === total;
+
+  const typeColor = typeL === 'foundation' ? 'var(--foundation)' :
+                    typeL === 'builder'    ? 'var(--builder)'    : 'var(--expert)';
+  const typeBg    = typeL === 'foundation' ? 'rgba(94,234,212,.15)' :
+                    typeL === 'builder'    ? 'rgba(252,211,77,.15)' : 'rgba(244,114,182,.15)';
+
+  return (
+    <div className="panel">
+      <div className="title">Mission Lessons</div>
+      <div className="mission-summary">
+        <div className="mission-summary-row">
+          <div className="mission-summary-title">{plan.missionNames[missionIdx]}</div>
+          <div className="mission-summary-type" style={{ background: typeBg, color: typeColor }}>{t}</div>
+        </div>
+        <div className="mission-summary-xp">{xp.toLocaleString()} XP on completion · {total} lessons</div>
+      </div>
+
+      <div className="lesson-list">
+        {Array.from({ length: total }).map((_, li) => {
+          const done = lessonsDone[li];
+          return (
+            <div key={li}
+                 className={`lesson-row ${done ? 'done' : ''}`}
+                 onClick={() => !done && onToggleLesson(li)}>
+              <div className={`lesson-circle ${done ? 'done' : ''}`}>
+                {done ? '✓' : li + 1}
+              </div>
+              <div style={{flex:1}}>
+                <div className="lesson-label">Lesson {li + 1}</div>
+                <div className="lesson-sub">{done ? 'Completed' : 'Tap to complete'}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {allDone && (
+        <div className="mission-done-banner">
+          <div className="mission-done-title">Mission Complete</div>
+          <div className="mission-done-xp">+{xp.toLocaleString()} XP awarded</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AllMissions({ plans, planProgress, onTap }){
+  const all = [];
+  plans.forEach(p => {
+    p.types.forEach((t, i) => {
+      all.push({ planId:p.id, planName:p.name, missionIdx:i, name:p.missionNames[i], type:t });
+    });
+  });
+  return (
+    <div className="panel">
+      <div className="title">All Missions · {all.length} total</div>
+      <div style={{fontSize:11,color:'var(--muted)',marginBottom:10,lineHeight:1.5}}>
+        Every mission across all plans. Tap Foundation/Builder to complete. Expert missions unlock only inside their plan.
+      </div>
+      {all.map((m, i) => {
+        const st = planProgress[m.planId]?.[m.missionIdx];
+        const done = st?.done;
+        const isExpert = m.type === 'Expert';
+        return (
+          <div key={i}
+               className={`flat-mission ${done ? 'done' : ''} ${isExpert && !done ? 'locked' : ''}`}
+               onClick={() => onTap(m.planId, m.missionIdx, m.type)}>
+            <div className={`flat-type-dot ${m.type.toLowerCase()}`}></div>
+            <div className="flat-info">
+              <div className="flat-name">{m.name}</div>
+              <div className="flat-plan">{m.planName} · {m.type}</div>
+            </div>
+            <div className={`flat-right ${done ? 'done' : isExpert ? 'lock' : ''}`}>
+              {done ? '✓' : isExpert ? '🔒' : '→'}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function RewardsTab({ rewards, onTap }){
+  if (rewards.length === 0) {
     return (
       <div className="panel">
         <div className="empty">
           <div className="empty-icon">🏆</div>
-          <div>Complete missions to earn your first card</div>
+          <div className="empty-msg">Level up to earn your first reward. Each new Level unlocks a unique card designed for that milestone.</div>
         </div>
       </div>
     );
   }
   return (
     <div className="panel">
-      <div className="title">Achievement Cards — {cards.length} / 10</div>
-      <div className="cards-grid">
-        {cards.map((c, i) => (
-          <div key={i} className={`card ${c.style}`}>
-            <div className="card-icon">{iconForStyle(c.style)}</div>
-            <div className="card-level">LV {c.level} · {c.styleName}</div>
-            <div className="card-name">{c.skill}</div>
-            <div className="card-date">{c.date}</div>
+      <div className="title">Reward Vault · {rewards.length} earned</div>
+      <div className="rewards-grid">
+        {rewards.map((r, i) => (
+          <div key={i} className={`reward-card ${r.seen ? '' : 'unseen'}`} onClick={() => onTap(i)}>
+            <div className="reward-icon">{r.icon}</div>
+            <div className="reward-name">{r.name}</div>
+            <div className="reward-level">Level {r.level}</div>
           </div>
         ))}
       </div>
@@ -407,161 +638,483 @@ function CardVault({ cards }){
   );
 }
 
-function LevelUpOverlay({ card, onClose }){
+function CertificatesTab({ certificates }){
+  if (certificates.length === 0) {
+    return (
+      <div className="panel">
+        <div className="empty">
+          <div className="empty-icon">📜</div>
+          <div className="empty-msg">Complete a full plan to earn your certificate. Each certificate confirms you mastered all 12 missions of that plan.</div>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="panel">
+      <div className="title">Certificates · {certificates.length}</div>
+      {certificates.map((c, i) => (
+        <div key={i} className="cert-card">
+          <div className="cert-seal">🏅</div>
+          <div className="cert-label">Certificate of Completion</div>
+          <div className="cert-plan">{c.planName}</div>
+          <div className="cert-date">Issued {c.date}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Configurator({ plans, setPlanTypes, onDone, onPlayAgain, hasProgress }){
+  const [active, setActive] = useState(0);
+  const plan = plans[active];
+  const counts = countBy(plan.types);
+  const xp = computeXPByType(plan.types);
+  const total = counts.Foundation * xp.Foundation + counts.Builder * xp.Builder + counts.Expert * xp.Expert;
+
+  const cycle = (t) => t === 'Foundation' ? 'Builder' : t === 'Builder' ? 'Expert' : 'Foundation';
+
+  return (
+    <div className="panel">
+      <div className="title">Configure Plans</div>
+
+      <div className="config-plan-switch">
+        {plans.map(p => (
+          <button key={p.id}
+                  className={`config-plan-tab ${active === p.id ? 'active' : ''}`}
+                  onClick={() => setActive(p.id)}>
+            Plan {p.id + 1}
+          </button>
+        ))}
+      </div>
+
+      <div style={{fontSize:13,fontWeight:800,marginBottom:4}}>{plan.name}</div>
+      <div style={{fontSize:10,color:'var(--muted)',marginBottom:12,lineHeight:1.5}}>
+        Tap slots to cycle type. Mission #12 is locked as Expert (triggers certificate).
+      </div>
+
+      <div className="slots">
+        {plan.types.map((t, i) => {
+          const isLast = i === 11;
+          const locked = isLast || hasProgress;
+          return (
+            <div key={i}
+                 className={`slot ${t.toLowerCase()} ${locked ? 'locked' : ''}`}
+                 onClick={() => !locked && setPlanTypes(plan.id, i, cycle(t))}>
+              <div className="slot-num">#{i+1}</div>
+              <div className="slot-type">{t.charAt(0)}</div>
+              {isLast && <div className="slot-lock">🔒</div>}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="xp-info">
+        <div className="xp-info-item">
+          <div className="xp-info-label" style={{color:'var(--foundation)'}}>Foundation</div>
+          <div className="xp-info-value">{counts.Foundation} × {xp.Foundation}</div>
+        </div>
+        <div className="xp-info-item">
+          <div className="xp-info-label" style={{color:'var(--builder)'}}>Builder</div>
+          <div className="xp-info-value">{counts.Builder} × {xp.Builder}</div>
+        </div>
+        <div className="xp-info-item">
+          <div className="xp-info-label" style={{color:'var(--expert)'}}>Expert</div>
+          <div className="xp-info-value">{counts.Expert} × {xp.Expert}</div>
+        </div>
+      </div>
+
+      <div className="total-row">
+        <div className="total-label">Plan XP Total</div>
+        <div className="total-value">{total.toLocaleString()} XP</div>
+      </div>
+
+      {hasProgress && (
+        <div style={{fontSize:10,color:'var(--muted)',textAlign:'center',marginTop:10,lineHeight:1.4}}>
+          Mission types locked during play. Play Again to reset progress and edit.
+        </div>
+      )}
+
+      <button className="config-btn"
+              onClick={onDone}
+              style={{marginTop:14,borderStyle:'solid',color:'var(--accent-2)',borderColor:'var(--accent-2)'}}>
+        ← Back to Plans
+      </button>
+      <button className="play-again" onClick={onPlayAgain}>↻ Play Again (Reset Progress)</button>
+    </div>
+  );
+}
+
+function LevelUpOverlay({ reward, remaining, onClose }){
   const particles = useMemo(() => (
-    Array.from({length:30}).map((_,i) => ({
-      left: Math.random()*100,
-      delay: Math.random()*2,
-      color: ['#22D3EE','#7C3AED','#EC4899','#FCD34D','#10B981'][i%5],
-      size: 6 + Math.random()*6
+    Array.from({length: 30}).map((_, i) => ({
+      left: Math.random() * 100,
+      delay: Math.random() * 2,
+      color: ['#22D3EE','#7C3AED','#EC4899','#FCD34D','#10B981'][i % 5],
+      size: 6 + Math.random() * 6,
     }))
-  ), []);
+  ), [reward.level]);
   return (
     <div className="overlay">
       <div className="particles">
         {particles.map((p, i) => (
           <div key={i} className="particle" style={{
-            left: p.left+'%',
+            left: p.left + '%',
             background: p.color,
             width: p.size,
             height: p.size,
-            animationDelay: p.delay+'s',
-            boxShadow:`0 0 12px ${p.color}`
+            animationDelay: p.delay + 's',
+            boxShadow: `0 0 12px ${p.color}`,
           }}/>
         ))}
       </div>
       <div className="overlay-inner">
         <div className="overlay-title">Level Up</div>
-        <div className="overlay-name">{card.levelName}</div>
-        <div className={`big-card ${card.style}`}>
-          <div className="big-card-icon">{iconForStyle(card.style)}</div>
-          <div className={`big-card-style ${card.style}`}>{card.styleName}</div>
-          <div className="big-card-skill">{card.skill}</div>
-          <div className="big-card-lv">LEVEL {card.level} · {card.date}</div>
+        <div className="overlay-level">LEVEL {reward.level}</div>
+        <div className="overlay-name">{getLevelName(reward.level)}</div>
+        <div className="big-reward">
+          <div className="big-reward-icon">{reward.icon}</div>
+          <div className="big-reward-tag">Reward Unlocked</div>
+          <div className="big-reward-name">{reward.name}</div>
+          <div className="big-reward-lv">Saved to Reward Vault</div>
         </div>
-        <button className="dismiss" onClick={onClose}>Claim Card</button>
+        <button className="dismiss" onClick={onClose}>Claim Reward</button>
+        {remaining > 0 && <div className="queue-ind">+{remaining} more reward{remaining > 1 ? 's' : ''} waiting</div>}
       </div>
     </div>
   );
 }
 
-// ─────────── App ───────────
+function ExpertLockPopup({ onClose }){
+  return (
+    <div className="lock-popup">
+      <div className="lock-inner">
+        <div className="lock-icon">🔒</div>
+        <div className="lock-title">Expert Mission Locked</div>
+        <div className="lock-msg">
+          Expert missions require completing the full plan. Since this is a practical capstone project that determines your certificate, it requires all prior skills to be in place.
+        </div>
+        <button className="lock-close" onClick={onClose}>Got it</button>
+      </div>
+    </div>
+  );
+}
+
+function BottomNav({ active, onChange, unseenRewards }){
+  const tabs = [
+    { key:'plans',    icon:'🗺️', label:'Plans'        },
+    { key:'missions', icon:'⚔️', label:'All Missions' },
+    { key:'rewards',  icon:'🏆', label:'Rewards'      },
+    { key:'certs',    icon:'📜', label:'Certificates' },
+  ];
+  return (
+    <div className="bottom-nav">
+      {tabs.map(t => (
+        <button key={t.key}
+                className={`bnav-btn ${active === t.key ? 'active' : ''}`}
+                onClick={() => onChange(t.key)}>
+          <div className="bnav-icon">{t.icon}</div>
+          <div className="bnav-label">{t.label}</div>
+          {t.key === 'rewards' && unseenRewards > 0 && (
+            <span className="bnav-badge">{unseenRewards}</span>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ─────────── App ─────────── */
 
 function App(){
-  const [types, setTypes] = useState(DEFAULT_TYPES);
-  const [completed, setCompleted] = useState(Array(12).fill(false));
-  const [tab, setTab] = useState('map');
-  const [cards, setCards] = useState([]);
-  const [unseenCards, setUnseenCards] = useState(0);
+  // Editable plans (types can be changed in configurator)
+  const [plans, setPlans] = useState(() =>
+    PLAN_DEFS.map(d => ({ ...d, types: [...d.defaultTypes] }))
+  );
+
+  // { [planId]: { [missionIdx]: [bool,...lessonCount] } }
+  const [lessonsDone, setLessonsDone] = useState({});
+
+  // Global account-level XP (authoritative)
+  const [xp, setXp] = useState(0);
+  // Animated display XP (trails behind for CSS transition)
+  const [displayXp, setDisplayXp] = useState(0);
+
+  // Earned rewards { level, name, icon, seen }
+  const [rewards, setRewards] = useState([]);
+  // Earned certificates { planId, planName, date }
+  const [certs, setCerts] = useState([]);
+
+  // Navigation
+  const [tab, setTab] = useState('plans');
+  const [planView, setPlanView] = useState('list'); // list | map | mission | configure
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [selectedMission, setSelectedMission] = useState(null);
+
+  // Animation state
   const [xpPopup, setXpPopup] = useState(null);
-  const [pendingLevelUp, setPendingLevelUp] = useState(null);
-  const [displayXP, setDisplayXP] = useState(0);
+  const [levelUpQueue, setLevelUpQueue] = useState([]);
+  const [showLock, setShowLock] = useState(false);
   const popupTimer = useRef(null);
+  const prevXpRef = useRef(0);
 
-  const xpByType = useMemo(() => computeXPByType(types), [types]);
-
-  const actualXP = useMemo(() => {
-    let sum = 0;
-    for (let i = 0; i < 12; i++) if (completed[i]) sum += xpByType[types[i]];
-    return sum;
-  }, [completed, types, xpByType]);
-
-  const hasAnyCompleted = completed.some(c => c);
-
-  const setType = (i, t) => {
-    setTypes(prev => { const nx = [...prev]; nx[i] = t; return nx; });
-  };
-
-  const handleComplete = (i) => {
-    if (completed[i]) return;
-    const prevLevel = getLevelFromXP(displayXP);
-    const gainedXP = xpByType[types[i]];
-    const newXP = actualXP + gainedXP;
-    const newLevel = getLevelFromXP(newXP);
-
-    // Mark completed
-    setCompleted(prev => { const nx = [...prev]; nx[i] = true; return nx; });
-
-    // Show +XP popup
-    setXpPopup(gainedXP);
-    if (popupTimer.current) clearTimeout(popupTimer.current);
-    popupTimer.current = setTimeout(() => setXpPopup(null), 1200);
-
-    // Animate bar after short delay
-    setTimeout(() => setDisplayXP(newXP), 300);
-
-    // Level up check (potentially multiple)
-    if (newLevel > prevLevel) {
-      // Queue all level ups between prev and new
-      const newCards = [];
-      for (let lv = prevLevel + 1; lv <= newLevel; lv++) {
-        const st = styleForLevel(lv);
-        const card = {
-          level: lv,
-          levelName: LEVELS[lv-1].name,
-          style: st,
-          styleName: st === 'seed' ? 'Seed' : st === 'flame' ? 'Flame' : 'Crystal',
-          skill: SKILL_NAMES[lv-1],
-          date: formatDate(new Date())
-        };
-        newCards.push(card);
+  const hasProgress = useMemo(() => {
+    if (xp > 0) return true;
+    for (const pid in lessonsDone) {
+      for (const mi in lessonsDone[pid]) {
+        if ((lessonsDone[pid][mi] || []).some(Boolean)) return true;
       }
-      // Show first, queue rest
-      setTimeout(() => {
-        setPendingLevelUp(newCards);
-      }, 900);
+    }
+    return false;
+  }, [xp, lessonsDone]);
+
+  // Mission state for a given plan
+  const missionStateFor = useCallback((planId) => {
+    const out = {};
+    for (let i = 0; i < 12; i++) {
+      const arr = lessonsDone[planId]?.[i] || [];
+      const total = lessonCount(planId, i);
+      const doneLessons = arr.filter(Boolean).length;
+      out[i] = { doneLessons, totalLessons: total, done: doneLessons === total };
+    }
+    return out;
+  }, [lessonsDone]);
+
+  const progressByPlan = useMemo(() => {
+    const out = {};
+    plans.forEach(p => {
+      let d = 0;
+      for (let i = 0; i < 12; i++) {
+        const arr = lessonsDone[p.id]?.[i] || [];
+        const total = lessonCount(p.id, i);
+        if (arr.filter(Boolean).length === total) d++;
+      }
+      out[p.id] = { done: d, total: 12 };
+    });
+    return out;
+  }, [plans, lessonsDone]);
+
+  const planProgressAll = useMemo(() => {
+    const out = {};
+    plans.forEach(p => { out[p.id] = missionStateFor(p.id); });
+    return out;
+  }, [plans, missionStateFor]);
+
+  const unseenRewards = rewards.filter(r => !r.seen).length;
+
+  /* ─── React to XP changes: animate bar, emit popup, queue level-ups ─── */
+  useEffect(() => {
+    const prev = prevXpRef.current;
+    if (xp === prev) return;
+    const gained = xp - prev;
+
+    if (gained > 0) {
+      // +XP popup
+      setXpPopup(gained);
+      if (popupTimer.current) clearTimeout(popupTimer.current);
+      popupTimer.current = setTimeout(() => setXpPopup(null), 1200);
+
+      // Animate progress bar with a short delay
+      setTimeout(() => setDisplayXp(xp), 320);
+
+      // Level-up detection (multi-level safe)
+      const prevLevel = getLevel(prev);
+      const newLevel = getLevel(xp);
+      if (newLevel > prevLevel) {
+        const fresh = [];
+        for (let lv = prevLevel + 1; lv <= newLevel; lv++) {
+          fresh.push(getRewardForLevel(lv));
+        }
+        setRewards(prevR => [...prevR, ...fresh.map(r => ({ ...r, seen: false }))]);
+        setTimeout(() => {
+          setLevelUpQueue(q => [...q, ...fresh]);
+        }, 950);
+      }
+    } else {
+      // XP reset (Play Again) — snap display back
+      setDisplayXp(xp);
+    }
+
+    prevXpRef.current = xp;
+  }, [xp]);
+
+  /* ─── Actions ─── */
+
+  const setPlanTypes = (planId, idx, type) => {
+    if (idx === 11) return; // mission 12 always Expert
+    setPlans(prev => {
+      const nx = [...prev];
+      const pl = { ...nx[planId], types: [...nx[planId].types] };
+      pl.types[idx] = type;
+      nx[planId] = pl;
+      return nx;
+    });
+  };
+
+  // Awards XP for a completed mission. Safe to call multiple times in rapid succession.
+  const awardMissionXP = (planId, missionIdx) => {
+    const plan = plans[planId];
+    const gained = xpForMission(plan.types, missionIdx);
+    setXp(prev => prev + gained);
+
+    // Certificate check — runs after state settles
+    setTimeout(() => {
+      setLessonsDone(prev => {
+        let allDone = true;
+        for (let i = 0; i < 12; i++) {
+          const arr = prev[planId]?.[i] || [];
+          const total = lessonCount(planId, i);
+          if (arr.filter(Boolean).length !== total) { allDone = false; break; }
+        }
+        if (allDone) {
+          setCerts(prevC => prevC.some(c => c.planId === planId)
+            ? prevC
+            : [...prevC, { planId, planName: plan.name, date: formatDate(new Date()) }]);
+        }
+        return prev;
+      });
+    }, 50);
+  };
+
+  const toggleLesson = (planId, missionIdx, lessonIdx) => {
+    const total = lessonCount(planId, missionIdx);
+    let becameComplete = false;
+    setLessonsDone(prev => {
+      const existing = prev[planId]?.[missionIdx] || Array(total).fill(false);
+      if (existing[lessonIdx]) return prev;
+      const newArr = [...existing];
+      while (newArr.length < total) newArr.push(false);
+      newArr[lessonIdx] = true;
+      if (newArr.filter(Boolean).length === total) becameComplete = true;
+
+      const planMap = { ...(prev[planId] || {}) };
+      planMap[missionIdx] = newArr;
+      return { ...prev, [planId]: planMap };
+    });
+    if (becameComplete) {
+      // Defer so lessonsDone state has committed
+      queueMicrotask(() => awardMissionXP(planId, missionIdx));
     }
   };
 
-  const dismissLevelUp = () => {
-    const [first, ...rest] = pendingLevelUp;
-    setCards(prev => [...prev, first]);
-    setUnseenCards(prev => prev + 1);
-    if (rest.length > 0) {
-      setPendingLevelUp(rest);
-    } else {
-      setPendingLevelUp(null);
-    }
+  const completeEntireMission = (planId, missionIdx) => {
+    const total = lessonCount(planId, missionIdx);
+    let wasIncomplete = false;
+    setLessonsDone(prev => {
+      const existing = prev[planId]?.[missionIdx] || Array(total).fill(false);
+      if (existing.filter(Boolean).length === total) return prev;
+      wasIncomplete = true;
+      const planMap = { ...(prev[planId] || {}) };
+      planMap[missionIdx] = Array(total).fill(true);
+      return { ...prev, [planId]: planMap };
+    });
+    if (wasIncomplete) queueMicrotask(() => awardMissionXP(planId, missionIdx));
+  };
+
+  const handleAllMissionsTap = (planId, missionIdx, type) => {
+    const st = planProgressAll[planId]?.[missionIdx];
+    if (st?.done) return;
+    if (type === 'Expert') { setShowLock(true); return; }
+    completeEntireMission(planId, missionIdx);
+  };
+
+  const dismissLevelUp = () => setLevelUpQueue(prev => prev.slice(1));
+
+  const markRewardSeen = (idx) => {
+    setRewards(prev => prev.map((r, i) => i === idx ? { ...r, seen: true } : r));
   };
 
   const handlePlayAgain = () => {
-    setCompleted(Array(12).fill(false));
-    setDisplayXP(0);
-    setCards([]);
-    setUnseenCards(0);
+    setLessonsDone({});
+    setXp(0);
+    setDisplayXp(0);
+    setRewards([]);
+    setCerts([]);
     setXpPopup(null);
-    setPendingLevelUp(null);
+    setLevelUpQueue([]);
+    setPlanView('list');
+    setSelectedPlan(null);
+    setSelectedMission(null);
+    setTab('plans');
+    prevXpRef.current = 0;
   };
 
   const handleTabChange = (t) => {
     setTab(t);
-    if (t === 'cards') setUnseenCards(0);
+    if (t === 'plans') setPlanView('list');
   };
 
-  const currentCard = pendingLevelUp && pendingLevelUp[0];
+  /* ─── Rendering ─── */
+
+  const renderPlansTab = () => {
+    if (planView === 'configure') {
+      return (
+        <Configurator plans={plans}
+                      setPlanTypes={setPlanTypes}
+                      onDone={() => setPlanView('list')}
+                      onPlayAgain={handlePlayAgain}
+                      hasProgress={hasProgress} />
+      );
+    }
+    if (planView === 'mission' && selectedPlan !== null && selectedMission !== null) {
+      const plan = plans[selectedPlan];
+      const total = lessonCount(plan.id, selectedMission);
+      const lessons = lessonsDone[plan.id]?.[selectedMission] || Array(total).fill(false);
+      return (
+        <>
+          <div className="back-bar">
+            <button className="back-btn" onClick={() => { setPlanView('map'); setSelectedMission(null); }}>← Map</button>
+            <div className="back-title">{plan.missionNames[selectedMission]}</div>
+          </div>
+          <LessonView plan={plan}
+                      missionIdx={selectedMission}
+                      lessonsDone={lessons}
+                      onToggleLesson={(li) => toggleLesson(plan.id, selectedMission, li)} />
+        </>
+      );
+    }
+    if (planView === 'map' && selectedPlan !== null) {
+      const plan = plans[selectedPlan];
+      return (
+        <>
+          <div className="back-bar">
+            <button className="back-btn" onClick={() => { setPlanView('list'); setSelectedPlan(null); }}>← Plans</button>
+            <div className="back-title">{plan.name}</div>
+          </div>
+          <MissionMap plan={plan}
+                      missionState={planProgressAll[plan.id]}
+                      onOpenMission={(i) => { setSelectedMission(i); setPlanView('mission'); }} />
+        </>
+      );
+    }
+    return (
+      <PlansList plans={plans}
+                 progressByPlan={progressByPlan}
+                 certs={certs}
+                 onOpenPlan={(id) => { setSelectedPlan(id); setPlanView('map'); }}
+                 onOpenConfig={() => setPlanView('configure')} />
+    );
+  };
+
+  const currentLevelUp = levelUpQueue[0];
 
   return (
     <div>
-      <div style={{textAlign:'center',margin:'8px 0 18px'}}>
-        <div style={{fontSize:22,fontWeight:900,letterSpacing:.5,background:'linear-gradient(90deg,#22D3EE,#7C3AED)',WebkitBackgroundClip:'text',backgroundClip:'text',color:'transparent'}}>SHAI</div>
-        <div style={{fontSize:10,color:'var(--muted)',letterSpacing:2.5,textTransform:'uppercase',marginTop:2}}>XP Progress Prototype</div>
-      </div>
+      <TopHead />
+      <ProgressBar xp={displayXp} xpPopup={xpPopup} />
 
-      <PlanConfig types={types} setType={setType} hasAnyCompleted={hasAnyCompleted} onPlayAgain={handlePlayAgain} xpByType={xpByType} />
-      <ProgressBar xp={displayXP} xpPopup={xpPopup} />
+      {tab === 'plans'    && renderPlansTab()}
+      {tab === 'missions' && <AllMissions plans={plans} planProgress={planProgressAll} onTap={handleAllMissionsTap} />}
+      {tab === 'rewards'  && <RewardsTab rewards={rewards} onTap={markRewardSeen} />}
+      {tab === 'certs'    && <CertificatesTab certificates={certs} />}
 
-      <div className="tabs">
-        <button className={`tab ${tab==='map'?'active':''}`} onClick={() => handleTabChange('map')}>Mission Map</button>
-        <button className={`tab ${tab==='cards'?'active':''}`} onClick={() => handleTabChange('cards')}>
-          Cards
-          {unseenCards > 0 && <span className="tab-badge">{unseenCards}</span>}
-        </button>
-      </div>
+      <BottomNav active={tab} onChange={handleTabChange} unseenRewards={unseenRewards} />
 
-      {tab === 'map' && <MissionMap types={types} completed={completed} onComplete={handleComplete} />}
-      {tab === 'cards' && <CardVault cards={cards} />}
-
-      {currentCard && <LevelUpOverlay card={currentCard} onClose={dismissLevelUp} />}
+      {currentLevelUp && (
+        <LevelUpOverlay reward={currentLevelUp}
+                        remaining={levelUpQueue.length - 1}
+                        onClose={dismissLevelUp} />
+      )}
+      {showLock && <ExpertLockPopup onClose={() => setShowLock(false)} />}
     </div>
   );
 }
