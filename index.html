@@ -225,6 +225,22 @@
   .lock-msg{font-size:13px;line-height:1.55;color:var(--text);margin-bottom:18px;}
   .lock-close{width:100%;padding:12px;background:var(--panel-2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px;text-transform:uppercase;}
   .lock-close:hover{border-color:var(--expert);color:var(--expert);}
+
+  /* Plan completion celebration */
+  .plan-done-inner{max-width:340px;width:100%;background:linear-gradient(145deg,#2A2048,#1B1A3A);border:2px solid var(--gold);border-radius:18px;padding:28px 22px;text-align:center;position:relative;overflow:hidden;animation:cardReveal .6s both cubic-bezier(.2,.8,.2,1);box-shadow:0 0 60px rgba(253,230,138,.35);}
+  .plan-done-inner::before{content:'';position:absolute;inset:-40%;background:radial-gradient(circle at 50% 0%,rgba(253,230,138,.25),transparent 60%);pointer-events:none;}
+  .plan-done-icon{font-size:56px;margin-bottom:10px;position:relative;z-index:1;filter:drop-shadow(0 8px 20px rgba(0,0,0,.5));}
+  .plan-done-tag{font-size:10px;color:var(--gold);letter-spacing:3px;text-transform:uppercase;font-weight:800;margin-bottom:10px;position:relative;z-index:1;}
+  .plan-done-title{font-size:20px;font-weight:900;margin-bottom:6px;position:relative;z-index:1;}
+  .plan-done-sub{font-size:12px;color:var(--muted);line-height:1.55;margin-bottom:20px;position:relative;z-index:1;}
+  .plan-done-cta{width:100%;padding:14px;background:linear-gradient(90deg,var(--accent-2),var(--accent));border:none;border-radius:12px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:1.5px;text-transform:uppercase;position:relative;z-index:1;box-shadow:0 4px 16px rgba(124,58,237,.4);margin-bottom:8px;}
+  .plan-done-cta:hover{transform:translateY(-1px);}
+  .plan-done-dismiss{width:100%;padding:10px;background:transparent;border:none;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;letter-spacing:1px;text-transform:uppercase;position:relative;z-index:1;}
+  .plan-done-dismiss:hover{color:var(--text);}
+
+  /* Back to Map button in LessonView */
+  .back-to-map-btn{width:100%;margin-top:14px;padding:14px;background:linear-gradient(90deg,var(--accent-2),var(--accent));border:none;border-radius:12px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;letter-spacing:1.5px;text-transform:uppercase;box-shadow:0 4px 14px rgba(124,58,237,.35);transition:transform .1s;}
+  .back-to-map-btn:active{transform:scale(.98);}
 </style>
 </head>
 <body>
@@ -522,7 +538,7 @@ function MissionMap({ plan, missionState, onOpenMission }){
   );
 }
 
-function LessonView({ plan, missionIdx, lessonsDone, onToggleLesson }){
+function LessonView({ plan, missionIdx, lessonsDone, onToggleLesson, onBackToMap }){
   const total = lessonCount(plan.id, missionIdx);
   const t = plan.types[missionIdx];
   const typeL = t.toLowerCase();
@@ -566,10 +582,15 @@ function LessonView({ plan, missionIdx, lessonsDone, onToggleLesson }){
       </div>
 
       {allDone && (
-        <div className="mission-done-banner">
-          <div className="mission-done-title">Mission Complete</div>
-          <div className="mission-done-xp">+{xp.toLocaleString()} XP awarded</div>
-        </div>
+        <>
+          <div className="mission-done-banner">
+            <div className="mission-done-title">Mission Complete</div>
+            <div className="mission-done-xp">+{xp.toLocaleString()} XP awarded</div>
+          </div>
+          <button className="back-to-map-btn" onClick={onBackToMap}>
+            ← Back to Mission Map
+          </button>
+        </>
       )}
     </div>
   );
@@ -825,6 +846,21 @@ function BottomNav({ active, onChange, unseenRewards }){
 
 /* ─────────── App ─────────── */
 
+function PlanCompletePopup({ planName, onViewCert, onDismiss }){
+  return (
+    <div className="lock-popup">
+      <div className="plan-done-inner">
+        <div className="plan-done-icon">🏆</div>
+        <div className="plan-done-tag">Plan Completed</div>
+        <div className="plan-done-title">{planName}</div>
+        <div className="plan-done-sub">All 12 missions complete. Your certificate is ready.</div>
+        <button className="plan-done-cta" onClick={onViewCert}>View Certificate</button>
+        <button className="plan-done-dismiss" onClick={onDismiss}>Dismiss</button>
+      </div>
+    </div>
+  );
+}
+
 function App(){
   // Editable plans (types can be changed in configurator)
   const [plans, setPlans] = useState(() =>
@@ -854,6 +890,8 @@ function App(){
   const [xpPopup, setXpPopup] = useState(null);
   const [levelUpQueue, setLevelUpQueue] = useState([]);
   const [showLock, setShowLock] = useState(false);
+  // { planId, planName } when plan just fully completed — shown after level-ups clear
+  const [planCompletePopup, setPlanCompletePopup] = useState(null);
   const popupTimer = useRef(null);
   const prevXpRef = useRef(0);
 
@@ -966,9 +1004,12 @@ function App(){
           if (arr.filter(Boolean).length !== total) { allDone = false; break; }
         }
         if (allDone) {
-          setCerts(prevC => prevC.some(c => c.planId === planId)
-            ? prevC
-            : [...prevC, { planId, planName: plan.name, date: formatDate(new Date()) }]);
+          setCerts(prevC => {
+            if (prevC.some(c => c.planId === planId)) return prevC;
+            // First-time plan completion — also trigger celebration popup
+            setPlanCompletePopup({ planId, planName: plan.name });
+            return [...prevC, { planId, planName: plan.name, date: formatDate(new Date()) }];
+          });
         }
         return prev;
       });
@@ -1034,6 +1075,7 @@ function App(){
     setCerts([]);
     setXpPopup(null);
     setLevelUpQueue([]);
+    setPlanCompletePopup(null);
     setPlanView('list');
     setSelectedPlan(null);
     setSelectedMission(null);
@@ -1071,7 +1113,8 @@ function App(){
           <LessonView plan={plan}
                       missionIdx={selectedMission}
                       lessonsDone={lessons}
-                      onToggleLesson={(li) => toggleLesson(plan.id, selectedMission, li)} />
+                      onToggleLesson={(li) => toggleLesson(plan.id, selectedMission, li)}
+                      onBackToMap={() => { setPlanView('map'); setSelectedMission(null); }} />
         </>
       );
     }
@@ -1116,6 +1159,18 @@ function App(){
         <LevelUpOverlay reward={currentLevelUp}
                         remaining={levelUpQueue.length - 1}
                         onClose={dismissLevelUp} />
+      )}
+      {!currentLevelUp && planCompletePopup && (
+        <PlanCompletePopup
+          planName={planCompletePopup.planName}
+          onViewCert={() => {
+            setPlanCompletePopup(null);
+            setPlanView('list');
+            setSelectedPlan(null);
+            setSelectedMission(null);
+            setTab('certs');
+          }}
+          onDismiss={() => setPlanCompletePopup(null)} />
       )}
       {showLock && <ExpertLockPopup onClose={() => setShowLock(false)} />}
     </div>
